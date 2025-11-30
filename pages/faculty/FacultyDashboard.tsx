@@ -24,8 +24,9 @@ const FacultyDashboard: React.FC = () => {
   const [savingStudent, setSavingStudent] = useState(false);
   const canManageNotices = user?.role === 'faculty' || user?.role === 'admin';
   const canCreateNotices = user?.role === 'faculty';
-  const canEditStudents = user?.role === 'faculty' || user?.role === 'admin';
-  const canManageEvents = user?.role === 'faculty' || user?.role === 'admin';
+  const canEditStudents = user?.role === 'admin'; // Only admin can edit students
+  const canManageEvents = user?.role === 'admin'; // Only admin can manage events
+  const canViewStudents = user?.role === 'admin'; // Only admin can view student directory
 
   useEffect(() => {
     if (user) {
@@ -83,103 +84,104 @@ const FacultyDashboard: React.FC = () => {
   return (
     <div>
         <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-800">{canManageNotices ? 'My Notices' : 'Faculty Notices'}</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{canManageNotices ? 'My Notices' : 'Faculty Notices'}</h1>
             {canCreateNotices && (
-              <Link to="/faculty/create" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
-                  <Plus className="w-5 h-5" />
-                  <span>Create New</span>
-              </Link>
+            <Link to="/faculty/create" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+                <Plus className="w-5 h-5" />
+                <span>Create New</span>
+            </Link>
             )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                     <tr>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Title</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Category</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Published</th>
-                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Target</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Title</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Category</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Published</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Target</th>
                         {canManageNotices && (
-                          <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase text-right">Actions</th>
                         )}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                     {myNotices.map(notice => (
-                        <tr key={notice.id} className="hover:bg-slate-50">
+                        <tr key={notice.id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                             <td className="px-6 py-4">
-                                <p className="font-medium text-slate-800">{notice.title}</p>
-                                <p className="text-xs text-slate-500 truncate max-w-xs">{notice.description}</p>
+                                <p className="font-medium text-slate-800 dark:text-white">{notice.title}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xs">{notice.description}</p>
                             </td>
                             <td className="px-6 py-4">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                                     {notice.category}
                                 </span>
                             </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
+                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
                                 {new Date(notice.createdAt).toLocaleDateString()}
                             </td>
-                            <td className="px-6 py-4 text-xs text-slate-500">
+                            <td className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">
                                 {notice.target.courses.length > 0 ? notice.target.courses.join(', ') : 'All'}
                             </td>
                             {canManageNotices && (
-                              <td className="px-6 py-4 text-right space-x-2">
-                                  <button className="text-slate-400 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
-                                  <button onClick={() => handleDelete(notice.id)} className="text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
-                              </td>
+                            <td className="px-6 py-4 text-right space-x-2">
+                                <button className="text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400"><Edit2 className="w-4 h-4" /></button>
+                                <button onClick={() => handleDelete(notice.id)} className="text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                            </td>
                             )}
                         </tr>
                     ))}
                     {myNotices.length === 0 && (
                         <tr>
-                            <td colSpan={canManageNotices ? 5 : 4} className="px-6 py-8 text-center text-slate-500">No notices to display yet.</td>
+                            <td colSpan={canManageNotices ? 5 : 4} className="px-6 py-8 text-center text-slate-500 dark:text-slate-400">No notices to display yet.</td>
                         </tr>
                     )}
                 </tbody>
             </table>
         </div>
 
+        {canViewStudents && (
         <div className="mt-12 space-y-6">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-slate-800">Student Directory</h2>
-                <span className="text-sm text-slate-500">{students.length} students</span>
+                <h2 className="text-xl font-semibold text-slate-800 dark:text-white">Student Directory</h2>
+                <span className="text-sm text-slate-500 dark:text-slate-400">{students.length} students</span>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 {loadingStudents ? (
-                    <div className="p-8 text-center text-slate-500">Loading students...</div>
+                    <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading students...</div>
                 ) : students.length === 0 ? (
-                    <div className="p-8 text-center text-slate-500">No approved students found.</div>
+                    <div className="p-8 text-center text-slate-500 dark:text-slate-400">No approved students found.</div>
                 ) : (
                     <table className="w-full text-left">
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                        <thead className="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Name</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Program</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Roll No.</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Contact</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Name</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Program</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Roll No.</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase">Contact</th>
                                 {canEditStudents && (
-                                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Actions</th>
+                                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase text-right">Actions</th>
                                 )}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                             {students.map(student => (
-                                <tr key={student.id} className="hover:bg-slate-50">
+                                <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                                     <td className="px-6 py-4">
-                                        <p className="font-medium text-slate-800">{student.fullName}</p>
-                                        <p className="text-xs text-slate-500">{student.section ? `Section ${student.section}` : 'General'}</p>
+                                        <p className="font-medium text-slate-800 dark:text-white">{student.fullName}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{student.section ? `Section ${student.section}` : 'General'}</p>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
                                         {student.course} • {student.department} ({student.year})
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
                                         {student.collegeRollNo || 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600">{student.email}</td>
+                                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">{student.email}</td>
                                     {canEditStudents && (
                                       <td className="px-6 py-4 text-right">
-                                        <button onClick={() => beginEditStudent(student)} className="inline-flex items-center text-blue-600 text-sm font-medium hover:text-blue-700">
+                                        <button onClick={() => beginEditStudent(student)} className="inline-flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300">
                                           <Edit2 className="w-4 h-4 mr-1" /> Edit
                                         </button>
                                       </td>
@@ -279,7 +281,9 @@ const FacultyDashboard: React.FC = () => {
               </form>
             )}
         </div>
+        )}
 
+        {canManageEvents && (
         <div className="mt-12">
             <EventManager
               title="Events Calendar"
@@ -288,6 +292,7 @@ const FacultyDashboard: React.FC = () => {
               allowAllActions={user?.role === 'admin'}
             />
         </div>
+        )}
     </div>
   );
 };

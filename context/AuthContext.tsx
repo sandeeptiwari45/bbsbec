@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../types';
+import { Role, User } from '../types';
 import { MockService } from '../services/mockService';
 
 interface AuthContextType {
@@ -7,7 +7,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string) => Promise<void>;
-  register: (data: any, code: string) => Promise<void>;
+  register: (data: any, code: string, allowedRoles?: Role[]) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
 }
@@ -38,10 +38,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (data: any, code: string) => {
+  const register = async (data: any, code: string, allowedRoles: Role[] = ['student', 'faculty', 'admin']) => {
     setIsLoading(true);
     try {
-      await MockService.register(data, code);
+      await MockService.register(data, code, allowedRoles);
       // We don't auto login after register if approval is needed, 
       // but for this demo flow we might expect the user to go to login.
     } finally {

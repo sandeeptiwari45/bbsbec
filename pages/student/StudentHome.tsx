@@ -4,6 +4,7 @@ import { MockService } from '../../services/mockService';
 import { Notice, CATEGORY_COLORS } from '../../types';
 import NoticeCard from '../../components/NoticeCard';
 import { Filter, Search } from 'lucide-react';
+import NotificationPanel from '../../components/NotificationPanel';
 
 const StudentHome: React.FC = () => {
   const { user } = useAuth();
@@ -47,8 +48,8 @@ const StudentHome: React.FC = () => {
     <div>
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-            <h1 className="text-2xl font-bold text-slate-900">Notice Board</h1>
-            <p className="text-slate-500 text-sm">Welcome back, {user?.fullName}</p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Notice Board</h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Welcome back, {user?.fullName}</p>
         </div>
         
         <div className="flex items-center space-x-3 w-full md:w-auto">
@@ -57,11 +58,12 @@ const StudentHome: React.FC = () => {
                 <input 
                     type="text" 
                     placeholder="Search notices..." 
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
             </div>
+            <NotificationPanel />
             {/* Filter Dropdown could go here */}
         </div>
       </div>
@@ -74,8 +76,8 @@ const StudentHome: React.FC = () => {
                 onClick={() => setFilterCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
                     filterCategory === cat 
-                    ? 'bg-slate-800 text-white border-slate-800' 
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-800 dark:bg-blue-600 text-white border-slate-800 dark:border-blue-600' 
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
             >
                 {cat}
@@ -97,10 +99,10 @@ const StudentHome: React.FC = () => {
             ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed border-slate-300">
-            <Filter className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-600">No notices found</h3>
-            <p className="text-slate-400">Try adjusting your filters or search.</p>
+        <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+            <Filter className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400">No notices found</h3>
+            <p className="text-slate-400 dark:text-slate-500">Try adjusting your filters or search.</p>
         </div>
       )}
     </div>

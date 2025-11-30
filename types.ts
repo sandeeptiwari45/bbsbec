@@ -5,6 +5,12 @@ export interface User {
   fullName: string;
   email: string;
   role: Role;
+  designation?: string; // e.g., 'Mentor', 'HOD', 'Principal', 'Professor', 'Assistant Professor'
+  profileImage?: string;
+  mobile?: string;
+  dateOfBirth?: string;
+  address?: string;
+  caste?: string;
   // Student specific fields
   fatherName?: string;
   collegeRollNo?: string;
@@ -14,8 +20,18 @@ export interface User {
   year?: string;
   semester?: string;
   section?: string;
+  // Faculty specific fields
+  subjects?: string[];
+  teachingSemesters?: string[];
+  teachingGroups?: string[];
   isApproved?: boolean;
   favourites?: string[]; // Array of notice IDs
+}
+
+export interface NoticeAttachment {
+  name: string;
+  url: string;
+  type: 'pdf' | 'image' | 'document';
 }
 
 export interface Notice {
@@ -28,12 +44,20 @@ export interface Notice {
   createdAt: string; // ISO Date string
   isPinned: boolean;
   eventDate?: string; // ISO Date string for calendar
+  scheduledPublishDate?: string; // ISO Date string for scheduled publishing
+  scheduledPublishTime?: string; // Time string (HH:mm) for scheduled publishing
+  isScheduled?: boolean; // Whether notice is scheduled for future publishing
+  attachments?: NoticeAttachment[];
+  readBy?: Array<{ userId: string; readAt: string }>;
+  isRead?: boolean; // For current user
   target: {
     courses: string[];
     departments: string[];
     years: string[];
     semesters: string[];
     sections: string[];
+    groups?: string[]; // Groups/sections
+    specificRollNumbers?: string[]; // Specific roll numbers
   };
 }
 
@@ -42,8 +66,29 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   eventDate: string;
+  eventTime?: string;
   createdBy: string;
   createdByName: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'notice' | 'event' | 'approval' | 'general';
+  relatedId?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Report {
+  id: string;
+  noticeId: string;
+  reportedBy: string;
+  reason: string;
+  description?: string;
+  status: 'pending' | 'reviewed' | 'resolved' | 'dismissed';
 }
 
 export interface UniqueCode {
