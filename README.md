@@ -1,7 +1,5 @@
 # BBSBEC Digital Notice Board
 
-Vite + React frontend with a new Node.js/Express API backed by MongoDB Atlas. Use the frontend for the student/faculty/admin portal and the backend to persist data in real time.
-
 ## Prerequisites
 
 - Node.js 18+
