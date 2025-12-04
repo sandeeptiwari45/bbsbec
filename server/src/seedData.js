@@ -3,44 +3,390 @@ const Notice = require('./models/Notice');
 const RegistrationCode = require('./models/RegistrationCode');
 const Event = require('./models/Event');
 
-const seedData = async () => {
-  const userCount = await User.countDocuments();
-  if (userCount === 0) {
-    const [admin, faculty, student] = await User.create([
-      {
-        fullName: 'Admin User',
-        email: 'admin@bbsbec.edu',
-        role: 'admin',
-        isApproved: true,
-      },
-      {
-        fullName: 'Dr. Sharma',
-        email: 'faculty@bbsbec.edu',
-        role: 'faculty',
-        department: 'CSE',
-        isApproved: true,
-      },
-      {
-        fullName: 'Rohan Singh',
-        email: 'student@bbsbec.edu',
-        role: 'student',
-        fatherName: 'Mr. Singh',
-        collegeRollNo: '1901001',
-        course: 'B.Tech',
-        department: 'CSE',
-        year: '4th',
-        semester: '7',
-        section: 'A',
-        isApproved: true,
-        favourites: [],
-      },
-    ]);
+const bcrypt = require('bcryptjs');
 
-    await Notice.create([
+const seedData = async () => {
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
+  const users = [
+    {
+      fullName: 'Admin User',
+      email: 'admin@bbsbec.edu',
+      password: hashedPassword,
+      role: 'admin',
+      isApproved: true,
+    },
+    {
+      fullName: 'Dr. Sharma',
+      email: 'faculty@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'CSE',
+      designation: 'Professor',
+      isApproved: true,
+    },
+    {
+      fullName: 'Prof. Anjali Verma',
+      email: 'anjali.verma@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'ECE',
+      designation: 'Associate Professor',
+      isApproved: true,
+    },
+    {
+      fullName: 'Dr. Vikram Singh',
+      email: 'vikram.singh@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'ME',
+      designation: 'HOD',
+      isApproved: true,
+    },
+    {
+      fullName: 'Ms. Priya Kaur',
+      email: 'priya.kaur@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'Civil',
+      designation: 'Assistant Professor',
+      isApproved: true,
+    },
+    {
+      fullName: 'Mr. Rajesh Kumar',
+      email: 'rajesh.kumar@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'CSE',
+      designation: 'Lab Assistant',
+      isApproved: true,
+    },
+    {
+      fullName: 'Dr. Sunita Gupta',
+      email: 'sunita.gupta@bbsbec.edu',
+      password: hashedPassword,
+      role: 'faculty',
+      department: 'Applied Sciences',
+      designation: 'Professor',
+      isApproved: true,
+    },
+    {
+      fullName: 'Rohan Singh',
+      email: 'student@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Singh',
+      collegeRollNo: '1901001',
+      course: 'B.Tech',
+      department: 'CSE',
+      year: '4th',
+      semester: '7',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Amit Kumar',
+      email: 'amit.k@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Kumar',
+      collegeRollNo: '2001045',
+      course: 'BCA',
+      department: 'Computer Applications',
+      year: '2nd',
+      semester: '3',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Neha Gupta',
+      email: 'neha.g@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Gupta',
+      collegeRollNo: '2301020',
+      course: 'B.Tech',
+      department: 'Civil',
+      year: '1st',
+      semester: '1',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Sandeep Tiwari',
+      email: 'sandeep.t@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Tiwari',
+      collegeRollNo: '2103001',
+      course: 'B.Tech',
+      department: 'CSE',
+      year: '3rd',
+      semester: '5',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Priya Sharma',
+      email: 'priya.s@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Sharma',
+      collegeRollNo: '2103002',
+      course: 'B.Tech',
+      department: 'CSE',
+      year: '3rd',
+      semester: '5',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Rahul Verma',
+      email: 'rahul.v@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Verma',
+      collegeRollNo: '2204010',
+      course: 'B.Tech',
+      department: 'ECE',
+      year: '2nd',
+      semester: '3',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Simran Kaur',
+      email: 'simran.k@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Singh',
+      collegeRollNo: '2204015',
+      course: 'B.Tech',
+      department: 'ECE',
+      year: '2nd',
+      semester: '3',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Arjun Singh',
+      email: 'arjun.s@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. R. Singh',
+      collegeRollNo: '2005005',
+      course: 'B.Tech',
+      department: 'ME',
+      year: '4th',
+      semester: '7',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Vikas Dubey',
+      email: 'vikas.d@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Dubey',
+      collegeRollNo: '2005008',
+      course: 'B.Tech',
+      department: 'ME',
+      year: '4th',
+      semester: '7',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Anjali Mishra',
+      email: 'anjali.m@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Mishra',
+      collegeRollNo: '2306012',
+      course: 'MBA',
+      department: 'Management',
+      year: '1st',
+      semester: '1',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Karan Johar',
+      email: 'karan.j@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Johar',
+      collegeRollNo: '2306015',
+      course: 'MBA',
+      department: 'Management',
+      year: '1st',
+      semester: '1',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Sneha Reddy',
+      email: 'sneha.r@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Reddy',
+      collegeRollNo: '2107020',
+      course: 'MCA',
+      department: 'Computer Applications',
+      year: '2nd',
+      semester: '3',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Mohit Chauhan',
+      email: 'mohit.c@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Chauhan',
+      collegeRollNo: '2107025',
+      course: 'MCA',
+      department: 'Computer Applications',
+      year: '2nd',
+      semester: '3',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Pooja Rani',
+      email: 'pooja.r@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Ram',
+      collegeRollNo: '2301050',
+      course: 'B.Tech',
+      department: 'Civil',
+      year: '1st',
+      semester: '1',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Gurpreet Singh',
+      email: 'gurpreet.s@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. G. Singh',
+      collegeRollNo: '2203088',
+      course: 'B.Tech',
+      department: 'CSE',
+      year: '2nd',
+      semester: '3',
+      section: 'C',
+      isApproved: true,
+    },
+    {
+      fullName: 'Manish Pandey',
+      email: 'manish.p@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Pandey',
+      collegeRollNo: '1903100',
+      course: 'B.Tech',
+      department: 'CSE',
+      year: '4th',
+      semester: '7',
+      section: 'B',
+      isApproved: true,
+    },
+    {
+      fullName: 'Divya Bharti',
+      email: 'divya.b@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Bharti',
+      collegeRollNo: '2004055',
+      course: 'B.Tech',
+      department: 'ECE',
+      year: '3rd',
+      semester: '5',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Aakash Chopra',
+      email: 'aakash.c@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Chopra',
+      collegeRollNo: '2105060',
+      course: 'B.Tech',
+      department: 'ME',
+      year: '3rd',
+      semester: '5',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Sonia Gandhi',
+      email: 'sonia.g@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Gandhi',
+      collegeRollNo: '2302010',
+      course: 'BCA',
+      department: 'Computer Applications',
+      year: '1st',
+      semester: '1',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Deepak Kalra',
+      email: 'deepak.k@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Kalra',
+      collegeRollNo: '2202022',
+      course: 'BCA',
+      department: 'Computer Applications',
+      year: '2nd',
+      semester: '3',
+      section: 'A',
+      isApproved: true,
+    },
+    {
+      fullName: 'Ishita Dutta',
+      email: 'ishita.d@bbsbec.edu',
+      password: hashedPassword,
+      role: 'student',
+      fatherName: 'Mr. Dutta',
+      collegeRollNo: '2002033',
+      course: 'BCA',
+      department: 'Computer Applications',
+      year: '3rd',
+      semester: '5',
+      section: 'A',
+      isApproved: true,
+    }
+  ];
+
+  for (const user of users) {
+    // Add dummy profile image
+    user.profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.fullName)}`;
+
+    // Use updateOne to ensure password is set even if user exists (seedData usually runs on startup)
+    // But findOneAndUpdate with upsert=true and new=true is what was there. 
+    // However, if the user exists, we want to make sure the password is updated if it's missing.
+    // The previous code was: await User.findOneAndUpdate({ email: user.email }, user, { upsert: true, new: true });
+    // This replaces the document fields with the new 'user' object fields.
+    await User.findOneAndUpdate({ email: user.email }, user, { upsert: true, new: true });
+  }
+
+  // Fetch admin and faculty for notice creation
+  const admin = await User.findOne({ email: 'admin@bbsbec.edu' });
+  const faculty = await User.findOne({ email: 'faculty@bbsbec.edu' });
+
+  if ((await Notice.countDocuments()) < 10) {
+    const notices = [
       {
         title: 'Mid-Semester Exams Datesheet',
-        description:
-          'The mid-semester examinations for all B.Tech streams will commence from October 15th. Please check the detailed schedule on the notice board.',
+        description: 'The mid-semester examinations for all B.Tech streams will commence from October 15th. Please check the detailed schedule on the notice board.',
         category: 'Exam',
         publishedBy: admin._id,
         publishedByName: admin.fullName,
@@ -67,15 +413,196 @@ const seedData = async () => {
         isPinned: false,
         target: { courses: ['B.Tech'], departments: ['CSE'], years: ['4th'], semesters: ['7'], sections: ['A'] },
       },
-    ]);
+      {
+        title: 'Campus Recruitment Drive: TCS',
+        description: 'TCS will be visiting our campus for a recruitment drive on Oct 25th. Eligible students (CSE/ECE, >60%) please register by tomorrow.',
+        category: 'Placement',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: true,
+        eventDate: new Date(Date.now() + 86400000 * 12),
+        target: { courses: ['B.Tech', 'MCA'], departments: ['CSE', 'ECE'], years: ['4th'], semesters: [], sections: [] },
+      },
+      {
+        title: 'Annual Cultural Fest "Vibrance 2025"',
+        description: 'We are excited to announce our annual cultural fest "Vibrance 2025" to be held in December. Auditions for dance and music clubs start next week.',
+        category: 'Cultural',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: true,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Library Books Return',
+        description: 'All students are requested to return overdue library books before the commencement of exams to avoid fines.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Guest Lecture on AI & ML',
+        description: 'A guest lecture on "Future of AI" by Dr. K. Sivan is scheduled for this Saturday at the Main Auditorium. Attendance is mandatory for CSE students.',
+        category: 'Academic',
+        publishedBy: faculty._id,
+        publishedByName: faculty.fullName,
+        isPinned: false,
+        eventDate: new Date(Date.now() + 86400000 * 3),
+        target: { courses: ['B.Tech'], departments: ['CSE'], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Sports Day Registration',
+        description: 'Registration for Inter-College Sports Meet is now open. Interested students can register at the Sports Department office.',
+        category: 'Cultural',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Fee Submission Notice',
+        description: 'Last date for submission of semester fees without late fine is Oct 30th. Please ignore if already paid.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: true,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Workshop on Cyber Security',
+        description: 'A 2-day workshop on Ethical Hacking and Cyber Security will be conducted by CISCO. Certificates will be provided.',
+        category: 'Academic',
+        publishedBy: faculty._id,
+        publishedByName: faculty.fullName,
+        isPinned: false,
+        target: { courses: ['B.Tech', 'BCA', 'MCA'], departments: ['CSE'], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Blood Donation Camp',
+        description: 'NSS Unit is organizing a Blood Donation Camp on Nov 10th. Be a hero, donate blood.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        eventDate: new Date(Date.now() + 86400000 * 25),
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Placement Drive: Infosys',
+        description: 'Infosys off-campus drive registration link is live. Check your email for details.',
+        category: 'Placement',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: ['B.Tech', 'MCA'], departments: ['CSE', 'ECE', 'ME'], years: ['4th'], semesters: [], sections: [] },
+      },
+      {
+        title: 'Change in Class Timing',
+        description: 'Due to heavy fog, class timings are shifted by 1 hour. First lecture will start at 10:00 AM from tomorrow until further notice.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: true,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Scholarship Applications',
+        description: 'Applications for Merit-cum-Means Scholarship are open. Submit your forms at the scholarship cell.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Project Submission Guidelines',
+        description: 'Final year project reports must follow the IEEE format. Guidelines have been emailed to all project coordinators.',
+        category: 'Academic',
+        publishedBy: faculty._id,
+        publishedByName: faculty.fullName,
+        isPinned: false,
+        target: { courses: ['B.Tech'], departments: [], years: ['4th'], semesters: [], sections: [] },
+      },
+      {
+        title: 'Hostel Maintenance',
+        description: 'Water tank cleaning is scheduled for Sunday. Water supply will be disrupted from 10 AM to 2 PM.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'New Canteen Menu',
+        description: 'We have updated the canteen menu with healthier options based on student feedback.',
+        category: 'Important',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Internship Opportunity at DRDO',
+        description: 'Summer internship applications for DRDO are open for 3rd year students.',
+        category: 'Placement',
+        publishedBy: faculty._id,
+        publishedByName: faculty.fullName,
+        isPinned: false,
+        target: { courses: ['B.Tech'], departments: ['CSE', 'ECE', 'ME'], years: ['3rd'], semesters: [], sections: [] },
+      },
+      {
+        title: 'Yoga Day Celebration',
+        description: 'International Yoga Day will be celebrated in the college ground at 6 AM. Mats will be provided.',
+        category: 'Cultural',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: false,
+        target: { courses: [], departments: [], years: [], semesters: [], sections: [] },
+      },
+      {
+        title: 'Result Declaration: 5th Semester',
+        description: 'Results for B.Tech 5th Semester have been declared. Check the university portal.',
+        category: 'Exam',
+        publishedBy: admin._id,
+        publishedByName: admin.fullName,
+        isPinned: true,
+        target: { courses: ['B.Tech'], departments: [], years: ['3rd'], semesters: ['5'], sections: [] },
+      }
+    ];
 
+    await Notice.create(notices);
+  }
+
+  if ((await RegistrationCode.countDocuments()) === 0) {
     await RegistrationCode.create([
       { code: 'STD-2025-001', role: 'student', isUsed: false, createdFor: 'New Student' },
       { code: 'FAC-2025-001', role: 'faculty', isUsed: false, createdFor: 'New Faculty' },
       { code: 'ADM-2025-001', role: 'admin', isUsed: false, createdFor: 'New Admin' },
     ]);
+  }
 
-    await Event.create([
+  // Cleanup duplicates
+  const allEvents = await Event.find({}).sort({ createdAt: 1 });
+  const uniqueKeys = new Set();
+  const duplicates = [];
+  for (const event of allEvents) {
+    const key = `${event.title}-${new Date(event.eventDate).toISOString().split('T')[0]}`;
+    if (uniqueKeys.has(key)) {
+      duplicates.push(event._id);
+    } else {
+      uniqueKeys.add(key);
+    }
+  }
+  if (duplicates.length > 0) {
+    console.log(`Removing ${duplicates.length} duplicate events...`);
+    await Event.deleteMany({ _id: { $in: duplicates } });
+  }
+
+  // Check if events already exist to avoid duplicates
+  const existingEventsCount = await Event.countDocuments();
+  if (existingEventsCount < 5) {
+    const events = [
       {
         title: 'Faculty Meeting',
         description: 'Monthly academic planning meeting.',
@@ -90,11 +617,92 @@ const seedData = async () => {
         createdBy: admin._id,
         createdByName: admin.fullName,
       },
-    ]);
+      {
+        title: 'Inter-College Cricket Match',
+        description: 'Final match between CSE and ME departments.',
+        eventDate: new Date(Date.now() + 86400000 * 7),
+        createdBy: admin._id,
+        createdByName: admin.fullName,
+      },
+      {
+        title: 'Guest Lecture: Cloud Computing',
+        description: 'Expert session by AWS certified professional.',
+        eventDate: new Date(Date.now() + 86400000 * 15),
+        createdBy: faculty._id,
+        createdByName: faculty.fullName,
+        department: 'CSE',
+      },
+      {
+        title: 'Blood Donation Camp',
+        description: 'Organized by NSS unit in the main ground.',
+        eventDate: new Date(Date.now() + 86400000 * 25),
+        createdBy: admin._id,
+        createdByName: admin.fullName,
+      },
+      {
+        title: 'Workshop on React Native',
+        description: 'Hands-on workshop for mobile app development.',
+        eventDate: new Date(Date.now() + 86400000 * 18),
+        createdBy: faculty._id,
+        createdByName: faculty.fullName,
+        department: 'CSE',
+      },
+      {
+        title: 'Fresher\'s Party',
+        description: 'Welcome party for the new batch of 2025.',
+        eventDate: new Date(Date.now() + 86400000 * 30),
+        createdBy: admin._id,
+        createdByName: admin.fullName,
+      },
+      {
+        title: 'Mid-Sem Project Review',
+        description: 'Review of major projects for final year students.',
+        eventDate: new Date(Date.now() + 86400000 * 12),
+        createdBy: faculty._id,
+        createdByName: faculty.fullName,
+        year: '4th',
+      },
+      {
+        title: 'Independence Day Rehearsal',
+        description: 'Full dress rehearsal for the parade.',
+        eventDate: new Date(Date.now() + 86400000 * 40),
+        createdBy: admin._id,
+        createdByName: admin.fullName,
+      },
+      {
+        title: 'Alumni Meet 2025',
+        description: 'Grand reunion of past batches.',
+        eventDate: new Date(Date.now() + 86400000 * 60),
+        createdBy: admin._id,
+        createdByName: admin.fullName,
+      },
+      {
+        title: 'CodeHack Hackathon',
+        description: '24-hour coding hackathon open for all departments.',
+        eventDate: new Date(Date.now() + 86400000 * 22),
+        createdBy: faculty._id,
+        createdByName: faculty.fullName,
+      },
+      {
+        title: 'Industrial Visit: Hero Cycles',
+        description: 'Visit to manufacturing plant for ME students.',
+        eventDate: new Date(Date.now() + 86400000 * 28),
+        createdBy: faculty._id,
+        createdByName: faculty.fullName,
+        department: 'ME',
+      }
+    ];
 
-    console.log('Seed data inserted');
+    // Only insert events that don't already exist (by title)
+    for (const event of events) {
+      const exists = await Event.findOne({ title: event.title });
+      if (!exists) {
+        await Event.create(event);
+      }
+    }
   }
+
+  console.log('Seed data inserted/verified');
 };
 
 module.exports = { seedData };
-

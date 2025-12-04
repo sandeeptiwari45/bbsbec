@@ -3,9 +3,19 @@ const Event = require('../models/Event');
 
 const router = express.Router();
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const events = await Event.find().sort({ eventDate: 1 });
+    const { role, course, department, year, semester } = req.query;
+    let query = {};
+
+    if (role === 'student') {
+      if (course) query.course = { $in: [course, 'All'] };
+      if (department) query.department = { $in: [department, 'All'] };
+      if (year) query.year = { $in: [year, 'All'] };
+      if (semester) query.semester = { $in: [semester, 'All'] };
+    }
+
+    const events = await Event.find(query).sort({ eventDate: 1 });
     res.json(events);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -21,6 +31,10 @@ router.post('/', async (req, res) => {
       eventDate: payload.eventDate,
       createdBy: payload.createdBy,
       createdByName: payload.createdByName,
+      course: payload.course || 'All',
+      department: payload.department || 'All',
+      year: payload.year || 'All',
+      semester: payload.semester || 'All',
     });
     res.status(201).json(event);
   } catch (err) {

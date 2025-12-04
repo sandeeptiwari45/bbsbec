@@ -5,6 +5,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import StudentHome from './pages/student/StudentHome';
 import StudentCalendar from './pages/student/StudentCalendar';
 import StudentProfile from './pages/student/StudentProfile';
@@ -18,6 +20,7 @@ import AdminCalendar from './pages/admin/AdminCalendar';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminFaculty from './pages/admin/AdminFaculty';
 import AdminNotices from './pages/admin/AdminNotices';
+import AdminRequests from './pages/admin/AdminRequests';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; roles: string[] }> = ({ children, roles }) => {
@@ -47,6 +50,8 @@ const App: React.FC = () => {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
 
             {/* Student Routes */}
             <Route path="/student/*" element={
@@ -83,6 +88,7 @@ const App: React.FC = () => {
                   <Route path="calendar" element={<AdminCalendar />} />
                   <Route path="students" element={<AdminStudents />} />
                   <Route path="faculty" element={<AdminFaculty />} />
+                  <Route path="requests" element={<AdminRequests />} />
                   <Route path="*" element={<Navigate to="" />} />
                 </Routes>
               </ProtectedRoute>

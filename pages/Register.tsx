@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, User, Mail, Hash, Loader2, ArrowLeft, GraduationCap, BookOpen, Calendar, Layers } from 'lucide-react';
+import { ShieldCheck, User, Mail, Hash, Loader2, ArrowLeft, GraduationCap, BookOpen, Calendar, Layers, Phone, Lock, UserPlus, Image, AlertTriangle } from 'lucide-react';
 
 const Register: React.FC = () => {
     const { register } = useAuth();
@@ -13,7 +13,14 @@ const Register: React.FC = () => {
     const [formData, setFormData] = useState({
         code: '',
         fullName: '',
+        fatherName: '',
+        gender: '',
+        profileImage: '',
         email: '',
+        mobile: '',
+        dateOfBirth: '',
+        password: '',
+        confirmPassword: '',
         course: '',
         department: '',
         year: '',
@@ -31,8 +38,16 @@ const Register: React.FC = () => {
         setLoading(true);
         setError('');
 
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            setLoading(false);
+            return;
+        }
+
         try {
-            await register(formData, formData.code, ['student']);
+            // Remove confirmPassword from data sent to backend
+            const { confirmPassword, ...dataToSend } = formData;
+            await register(dataToSend, formData.code, ['student']);
             alert('Registration Successful! Please login.');
             navigate('/login');
         } catch (err: any) {
@@ -81,23 +96,66 @@ const Register: React.FC = () => {
                 )}
 
                 <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="md:col-span-2 bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Unique Registration Code</label>
-                        <div className="relative group">
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Registration Code</label>
+                        <div className="relative">
                             <ShieldCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
                             <input
                                 name="code"
                                 value={formData.code}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-mono uppercase tracking-wide transition-all"
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-mono uppercase tracking-wide transition-all hover:bg-white"
                                 placeholder="e.g. BBSBEC347520"
                             />
                         </div>
-                        <p className="text-xs text-slate-500 mt-2 flex items-center">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5"></span>
-                            Ask your faculty advisor for your unique code.
-                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 ml-1">Ask your faculty advisor for code</p>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1">Profile Image <span className="text-[10px] text-slate-400 font-normal">(Max 2MB)</span></label>
+                        <div className="relative">
+                            <label htmlFor="profile-upload" className="flex items-center justify-between w-full p-2 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-white hover:border-blue-300 transition-all group">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center overflow-hidden border border-slate-300">
+                                        {formData.profileImage ? (
+                                            <img src={formData.profileImage} alt="Preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Image className="w-5 h-5 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm text-slate-600 font-medium group-hover:text-blue-600 transition-colors">
+                                            {formData.profileImage ? 'Change Image' : 'Upload Image'}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400">JPG, PNG or GIF</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-500 shadow-sm group-hover:border-blue-200 group-hover:text-blue-600 transition-all">
+                                    Browse
+                                </div>
+                                <input
+                                    id="profile-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            if (file.size > 2 * 1024 * 1024) {
+                                                alert('File size must be less than 2MB');
+                                                return;
+                                            }
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                setFormData({ ...formData, profileImage: reader.result as string });
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }}
+                                />
+                            </label>
+                        </div>
                     </div>
 
                     <div className="group">
@@ -111,6 +169,65 @@ const Register: React.FC = () => {
                                 required
                                 className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white"
                                 placeholder="Sandeep Tiwari"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Father's Name</label>
+                        <div className="relative">
+                            <UserPlus className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+                            <input
+                                name="fatherName"
+                                value={formData.fatherName}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white"
+                                placeholder="Father's Name"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Gender</label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                            <select name="gender" value={formData.gender} onChange={handleChange} required className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none cursor-pointer hover:bg-white transition-all text-slate-700">
+                                <option value="" disabled>Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Date of Birth</label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5 pointer-events-none" />
+                            <input
+                                type="date"
+                                name="dateOfBirth"
+                                value={formData.dateOfBirth}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white text-slate-700"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Mobile Number</label>
+                        <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+                            <input
+                                type="tel"
+                                name="mobile"
+                                value={formData.mobile}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white"
+                                placeholder="9876543210"
                             />
                         </div>
                     </div>
@@ -131,25 +248,44 @@ const Register: React.FC = () => {
                         </div>
                     </div>
 
+
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1 group-focus-within:text-blue-600 transition-colors">Confirm Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors w-5 h-5" />
+                            <input
+                                type="password"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                required
+                                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all hover:bg-white"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                    </div>
+
                     {/* Academic Details Section Divider */}
                     <div className="md:col-span-2 pt-2 pb-1">
                         <div className="h-px bg-slate-100 w-full"></div>
                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-4 mb-1">Academic Details</p>
-                    </div>
-
-                    <div className="group">
-                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1">Course</label>
-                        <div className="relative">
-                            <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
-                            <select name="course" value={formData.course} onChange={handleChange} required className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none cursor-pointer hover:bg-white transition-all text-slate-700">
-                                <option value="" disabled>Select Course</option>
-                                <option value="B.Tech">B.Tech</option>
-                                <option value="BCA">BCA</option>
-                                <option value="BBA">BBA</option>
-                                <option value="MCA">MCA</option>
-                                <option value="MBA">MBA</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div className="group">
@@ -165,6 +301,23 @@ const Register: React.FC = () => {
                                 <option value="IT">IT</option>
                                 <option value="Computer Applications">Computer Applications</option>
                                 <option value="Management">Management</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="group">
+                        <label className="block text-sm font-medium text-slate-700 mb-1 ml-1">Course</label>
+                        <div className="relative">
+                            <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                            <select name="course" value={formData.course} onChange={handleChange} required className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none appearance-none cursor-pointer hover:bg-white transition-all text-slate-700">
+                                <option value="" disabled>Select Course</option>
+                                <option value="B.Tech">B.Tech</option>
+                                <option value="M.Tech">M.Tech</option>
+                                <option value="BCA">BCA</option>
+                                <option value="MCA">MCA</option>
+                                <option value="BBA">BBA</option>
+                                <option value="MBA">MBA</option>
+                                <option value="B.Voc">B.Voc</option>
                             </select>
                         </div>
                     </div>
@@ -220,6 +373,27 @@ const Register: React.FC = () => {
                                 <option value="C">Section C</option>
                                 <option value="D">Section D</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div className="md:col-span-2 pt-4">
+                        <div className="flex items-start space-x-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div className="text-sm text-yellow-800">
+                                <p className="font-semibold mb-1">Declaration</p>
+                                <p>I hereby declare that all the information provided above is true and correct to the best of my knowledge. I understand that if any information is found to be false or incorrect, the college authority has the right to take disciplinary action against me.</p>
+                            </div>
+                        </div>
+                        <div className="mt-4 flex items-center">
+                            <input
+                                type="checkbox"
+                                id="disclaimer"
+                                required
+                                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                            />
+                            <label htmlFor="disclaimer" className="ml-2 text-sm text-slate-600 cursor-pointer select-none">
+                                I agree to the above declaration.
+                            </label>
                         </div>
                     </div>
 

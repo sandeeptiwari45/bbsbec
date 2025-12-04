@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, ArrowRight, Loader2, User, Shield } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Loader2, User, Shield, X, CheckCircle } from 'lucide-react';
+import { MockService } from '../services/mockService';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotStatus, setForgotStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [forgotMessage, setForgotMessage] = useState('');
 
   useEffect(() => {
     setIsVisible(true);
@@ -20,7 +28,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      await login(email);
+      await login(email, password);
       const u = JSON.parse(localStorage.getItem('bbsbec_current_user') || '{}');
       if (u.role === 'student') navigate('/student/home');
       else if (u.role === 'faculty') navigate('/faculty');
@@ -32,9 +40,21 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = (demoEmail: string) => {
-    setEmail(demoEmail);
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotStatus('loading');
+    setForgotMessage('');
+    try {
+      await MockService.forgotPassword(forgotEmail);
+      setForgotStatus('success');
+      setForgotMessage('Password reset link has been sent to your email.');
+    } catch (err: any) {
+      setForgotStatus('error');
+      setForgotMessage(err.message || 'Failed to send reset link. Please try again.');
+    }
   };
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-100 p-4 relative overflow-hidden">
@@ -89,9 +109,20 @@ const Login: React.FC = () => {
               <input
                 type="password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all duration-300 hover:bg-white"
                 placeholder="••••••••"
               />
+            </div>
+            <div className="flex justify-end mt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                Forgot Password?
+              </button>
             </div>
           </div>
 
@@ -108,27 +139,92 @@ const Login: React.FC = () => {
           Don't have an account? <Link to="/register" className="text-blue-600 font-semibold hover:text-blue-700 hover:underline transition-colors">Register with Unique Code</Link>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <p className="text-xs font-semibold text-slate-400 text-center mb-3 uppercase tracking-wider">Quick Demo Login</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button onClick={() => handleDemoLogin('admin@bbsbec.edu')} className="p-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg border border-slate-200 hover:border-blue-200 transition-all duration-200 flex items-center justify-center space-x-1">
-              <Shield className="w-3 h-3" /> <span>Admin</span>
-            </button>
-            <button onClick={() => handleDemoLogin('faculty@bbsbec.edu')} className="p-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg border border-slate-200 hover:border-blue-200 transition-all duration-200 flex items-center justify-center space-x-1">
-              <User className="w-3 h-3" /> <span>Faculty (CSE)</span>
-            </button>
-            <button onClick={() => handleDemoLogin('student@bbsbec.edu')} className="p-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg border border-slate-200 hover:border-blue-200 transition-all duration-200 flex items-center justify-center space-x-1">
-              <User className="w-3 h-3" /> <span>Student (CSE)</span>
-            </button>
-            <button onClick={() => handleDemoLogin('amit.k@bbsbec.edu')} className="p-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg border border-slate-200 hover:border-blue-200 transition-all duration-200 flex items-center justify-center space-x-1">
-              <User className="w-3 h-3" /> <span>Student (BCA)</span>
-            </button>
-            <button onClick={() => handleDemoLogin('neha.g@bbsbec.edu')} className="col-span-2 p-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 rounded-lg border border-slate-200 hover:border-blue-200 transition-all duration-200 flex items-center justify-center space-x-1">
-              <User className="w-3 h-3" /> <span>Student (Civil)</span>
-            </button>
+
+      </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-lg font-bold text-slate-800">Reset Password</h3>
+              <button
+                onClick={() => {
+                  setShowForgotModal(false);
+                  setForgotStatus('idle');
+                  setForgotMessage('');
+                  setForgotEmail('');
+                }}
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {forgotStatus === 'success' ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-800 mb-2">Check your email</h4>
+                  <p className="text-slate-600 mb-6">{forgotMessage}</p>
+                  <button
+                    onClick={() => {
+                      setShowForgotModal(false);
+                      setForgotStatus('idle');
+                      setForgotMessage('');
+                      setForgotEmail('');
+                    }}
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-3 rounded-xl transition-colors"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <p className="text-sm text-slate-600 mb-4">
+                    Enter your registered email address below. We'll send you instructions to reset your password.
+                  </p>
+
+                  {forgotStatus === 'error' && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 flex items-center">
+                      <span className="mr-2">⚠️</span> {forgotMessage}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                      <input
+                        type="email"
+                        required
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={forgotStatus === 'loading'}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {forgotStatus === 'loading' ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <span>Send Reset Link</span>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

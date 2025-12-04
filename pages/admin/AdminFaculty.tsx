@@ -3,8 +3,21 @@ import { MockService } from '../../services/mockService';
 import { User } from '../../types';
 import { Search, Edit2, Trash2, Mail, Phone, Building2, BookOpen, X, Save } from 'lucide-react';
 
+import { useLocation } from 'react-router-dom';
+
 const AdminFaculty: React.FC = () => {
+    const location = useLocation();
     const [faculty, setFaculty] = useState<User[]>([]);
+
+    useEffect(() => {
+        if (location.state && (location.state as any).viewUserId && faculty.length > 0) {
+            const userId = (location.state as any).viewUserId;
+            const user = faculty.find(f => f.id === userId);
+            if (user) {
+                setViewFaculty(user);
+            }
+        }
+    }, [location.state, faculty]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDept, setFilterDept] = useState('All');
@@ -58,6 +71,10 @@ const AdminFaculty: React.FC = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (createForm.password !== (createForm as any).confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
         await MockService.addUser(createForm);
         setShowCreateModal(false);
         setCreateForm({
@@ -66,9 +83,38 @@ const AdminFaculty: React.FC = () => {
             designation: 'Assistant Professor',
             fullName: '',
             email: '',
-            mobile: ''
-        });
+            mobile: '',
+            password: '',
+            gender: '',
+            dateOfBirth: '',
+            address: '',
+            shortName: ''
+        } as any);
         loadFaculty();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this faculty member? This action cannot be undone.')) {
+            await MockService.deleteUser(id);
+            loadFaculty();
+        }
+    };
+
+    const [passwordModal, setPasswordModal] = useState<{ show: boolean; userId: string | null; name: string }>({
+        show: false,
+        userId: null,
+        name: ''
+    });
+    const [newPassword, setNewPassword] = useState('');
+
+    const handlePasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordModal.userId && newPassword) {
+            await MockService.resetUserPassword(passwordModal.userId, newPassword);
+            setPasswordModal({ show: false, userId: null, name: '' });
+            setNewPassword('');
+            alert('Password updated successfully');
+        }
     };
 
     return (
@@ -134,8 +180,12 @@ const AdminFaculty: React.FC = () => {
                         <div key={f.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-lg">
-                                        {f.fullName.charAt(0)}
+                                    <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-lg overflow-hidden">
+                                        {f.profileImage ? (
+                                            <img src={f.profileImage} alt={f.fullName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            f.fullName.charAt(0)
+                                        )}
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-slate-800 dark:text-white">{f.fullName}</h3>
@@ -143,8 +193,14 @@ const AdminFaculty: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex space-x-1">
-                                    <button onClick={() => handleEditClick(f)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors">
+                                    <button onClick={() => handleEditClick(f)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title="Edit">
                                         <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => setPasswordModal({ show: true, userId: f.id, name: f.fullName })} className="p-1 text-slate-400 hover:text-yellow-600 transition-colors" title="Change Password">
+                                        <div className="w-4 h-4 font-bold">🔑</div>
+                                    </button>
+                                    <button onClick={() => handleDelete(f.id)} className="p-1 text-slate-400 hover:text-red-600 transition-colors" title="Delete">
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -154,16 +210,16 @@ const AdminFaculty: React.FC = () => {
                                     <Mail className="w-4 h-4 mr-2 text-slate-400" />
                                     <span className="truncate">{f.email}</span>
                                 </div>
-                                {f.department && (
-                                    <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                                        <Building2 className="w-4 h-4 mr-2 text-slate-400" />
-                                        <span>{f.department}</span>
-                                    </div>
-                                )}
                                 {f.mobile && (
                                     <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
                                         <Phone className="w-4 h-4 mr-2 text-slate-400" />
                                         <span>{f.mobile}</span>
+                                    </div>
+                                )}
+                                {f.department && (
+                                    <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
+                                        <Building2 className="w-4 h-4 mr-2 text-slate-400" />
+                                        <span>{f.department}</span>
                                     </div>
                                 )}
                                 {f.subjects && f.subjects.length > 0 && (
@@ -200,8 +256,12 @@ const AdminFaculty: React.FC = () => {
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-center space-x-4 mb-4">
-                                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 text-2xl font-bold">
-                                    {viewFaculty.fullName.charAt(0)}
+                                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 text-2xl font-bold overflow-hidden">
+                                    {viewFaculty.profileImage ? (
+                                        <img src={viewFaculty.profileImage} alt={viewFaculty.fullName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        viewFaculty.fullName.charAt(0)
+                                    )}
                                 </div>
                                 <div>
                                     <h4 className="text-xl font-bold text-slate-800 dark:text-white">{viewFaculty.fullName}</h4>
@@ -266,6 +326,25 @@ const AdminFaculty: React.FC = () => {
                                     />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Short Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.shortName || ''}
+                                        onChange={e => setEditForm({ ...editForm, shortName: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        placeholder="e.g. JPS"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.mobile || ''}
+                                        onChange={e => setEditForm({ ...editForm, mobile: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                                     <input
                                         type="email"
@@ -292,12 +371,35 @@ const AdminFaculty: React.FC = () => {
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address</label>
                                     <input
                                         type="text"
-                                        value={editForm.mobile || ''}
-                                        onChange={e => setEditForm({ ...editForm, mobile: e.target.value })}
+                                        value={editForm.address || ''}
+                                        onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Profile Image</label>
+                                    {editForm.profileImage && (
+                                        <div className="mb-2">
+                                            <img src={editForm.profileImage} alt="Profile Preview" className="w-20 h-20 rounded-full object-cover border border-slate-200" />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setEditForm({ ...editForm, profileImage: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
@@ -333,12 +435,51 @@ const AdminFaculty: React.FC = () => {
                                     />
                                 </div>
                                 <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Short Name (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={createForm.shortName || ''}
+                                        onChange={e => setCreateForm({ ...createForm, shortName: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                        placeholder="e.g. JPS"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                    <input
+                                        type="text"
+                                        value={createForm.mobile || ''}
+                                        onChange={e => setCreateForm({ ...createForm, mobile: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                                     <input
                                         type="email"
                                         required
                                         value={createForm.email || ''}
                                         onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={createForm.password || ''}
+                                        onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={(createForm as any).confirmPassword || ''}
+                                        onChange={e => setCreateForm({ ...createForm, confirmPassword: e.target.value } as any)}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
@@ -365,11 +506,56 @@ const AdminFaculty: React.FC = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gender</label>
+                                    <select
+                                        value={createForm.gender || ''}
+                                        onChange={e => setCreateForm({ ...createForm, gender: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date of Birth</label>
+                                    <input
+                                        type="date"
+                                        value={createForm.dateOfBirth ? new Date(createForm.dateOfBirth).toISOString().split('T')[0] : ''}
+                                        onChange={e => setCreateForm({ ...createForm, dateOfBirth: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address</label>
                                     <input
                                         type="text"
-                                        value={createForm.mobile || ''}
-                                        onChange={e => setCreateForm({ ...createForm, mobile: e.target.value })}
+                                        value={createForm.address || ''}
+                                        onChange={e => setCreateForm({ ...createForm, address: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Profile Image</label>
+                                    {createForm.profileImage && (
+                                        <div className="mb-2">
+                                            <img src={createForm.profileImage} alt="Profile Preview" className="w-20 h-20 rounded-full object-cover border border-slate-200" />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setCreateForm({ ...createForm, profileImage: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
@@ -378,6 +564,40 @@ const AdminFaculty: React.FC = () => {
                                 <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Cancel</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
                                     <Save className="w-4 h-4 mr-2" /> Create Faculty
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Reset Modal */}
+            {passwordModal.show && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Reset Password</h3>
+                            <button onClick={() => setPasswordModal({ show: false, userId: null, name: '' })}><X className="w-5 h-5 text-slate-500" /></button>
+                        </div>
+                        <form onSubmit={handlePasswordReset} className="p-6 space-y-4">
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                Enter new password for <strong>{passwordModal.name}</strong>
+                            </p>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    placeholder="Enter new password"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3 pt-4">
+                                <button type="button" onClick={() => setPasswordModal({ show: false, userId: null, name: '' })} className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                                    Update Password
                                 </button>
                             </div>
                         </form>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { MockService } from '../../services/mockService';
 import { User } from '../../types';
 import { Search, Filter, Edit2, Trash2, MoreVertical, Eye, X, Save } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const AdminStudents: React.FC = () => {
+    const location = useLocation();
     const [students, setStudents] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +29,16 @@ const AdminStudents: React.FC = () => {
     useEffect(() => {
         loadStudents();
     }, []);
+
+    useEffect(() => {
+        if (location.state && (location.state as any).viewUserId && students.length > 0) {
+            const userId = (location.state as any).viewUserId;
+            const student = students.find(s => s.id === userId);
+            if (student) {
+                setViewStudent(student);
+            }
+        }
+    }, [location.state, students]);
 
     const loadStudents = async () => {
         setLoading(true);
@@ -62,6 +74,10 @@ const AdminStudents: React.FC = () => {
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (createForm.password !== (createForm as any).confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
         await MockService.addUser(createForm);
         setShowCreateModal(false);
         setCreateForm({
@@ -73,9 +89,39 @@ const AdminStudents: React.FC = () => {
             section: 'A',
             fullName: '',
             email: '',
-            collegeRollNo: ''
-        });
+            collegeRollNo: '',
+            password: '',
+            fatherName: '',
+            gender: '',
+            dateOfBirth: '',
+            mobile: '',
+            address: ''
+        } as any);
         loadStudents();
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+            await MockService.deleteUser(id);
+            loadStudents();
+        }
+    };
+
+    const [passwordModal, setPasswordModal] = useState<{ show: boolean; userId: string | null; name: string }>({
+        show: false,
+        userId: null,
+        name: ''
+    });
+    const [newPassword, setNewPassword] = useState('');
+
+    const handlePasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordModal.userId && newPassword) {
+            await MockService.resetUserPassword(passwordModal.userId, newPassword);
+            setPasswordModal({ show: false, userId: null, name: '' });
+            setNewPassword('');
+            alert('Password updated successfully');
+        }
     };
 
     return (
@@ -163,8 +209,12 @@ const AdminStudents: React.FC = () => {
                                     <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-700">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-xs">
-                                                    {student.fullName.charAt(0)}
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-xs overflow-hidden">
+                                                    {student.profileImage ? (
+                                                        <img src={student.profileImage} alt={student.fullName} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        student.fullName.charAt(0)
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-slate-800 dark:text-white text-sm">{student.fullName}</p>
@@ -195,6 +245,12 @@ const AdminStudents: React.FC = () => {
                                                 <button onClick={() => handleEditClick(student)} className="p-1 text-slate-400 hover:text-green-600 transition-colors" title="Edit">
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
+                                                <button onClick={() => setPasswordModal({ show: true, userId: student.id, name: student.fullName })} className="p-1 text-slate-400 hover:text-yellow-600 transition-colors" title="Change Password">
+                                                    <div className="w-4 h-4 font-bold">🔑</div>
+                                                </button>
+                                                <button onClick={() => handleDelete(student.id)} className="p-1 text-slate-400 hover:text-red-600 transition-colors" title="Delete">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -215,8 +271,12 @@ const AdminStudents: React.FC = () => {
                         </div>
                         <div className="p-6 space-y-4">
                             <div className="flex items-center space-x-4 mb-4">
-                                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 text-2xl font-bold">
-                                    {viewStudent.fullName.charAt(0)}
+                                <div className="w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 text-2xl font-bold overflow-hidden">
+                                    {viewStudent.profileImage ? (
+                                        <img src={viewStudent.profileImage} alt={viewStudent.fullName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        viewStudent.fullName.charAt(0)
+                                    )}
                                 </div>
                                 <div>
                                     <h4 className="text-xl font-bold text-slate-800 dark:text-white">{viewStudent.fullName}</h4>
@@ -278,12 +338,11 @@ const AdminStudents: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Father's Name</label>
                                     <input
-                                        type="email"
-                                        required
-                                        value={createForm.email || ''}
-                                        onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                                        type="text"
+                                        value={createForm.fatherName || ''}
+                                        onChange={e => setCreateForm({ ...createForm, fatherName: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
@@ -294,6 +353,67 @@ const AdminStudents: React.FC = () => {
                                         required
                                         value={createForm.collegeRollNo || ''}
                                         onChange={e => setCreateForm({ ...createForm, collegeRollNo: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={createForm.email || ''}
+                                        onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                    <input
+                                        type="text"
+                                        value={createForm.mobile || ''}
+                                        onChange={e => setCreateForm({ ...createForm, mobile: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gender</label>
+                                    <select
+                                        value={createForm.gender || ''}
+                                        onChange={e => setCreateForm({ ...createForm, gender: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={createForm.password || ''}
+                                        onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={(createForm as any).confirmPassword || ''}
+                                        onChange={e => setCreateForm({ ...createForm, confirmPassword: e.target.value } as any)}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date of Birth</label>
+                                    <input
+                                        type="date"
+                                        value={createForm.dateOfBirth ? new Date(createForm.dateOfBirth).toISOString().split('T')[0] : ''}
+                                        onChange={e => setCreateForm({ ...createForm, dateOfBirth: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
@@ -354,12 +474,42 @@ const AdminStudents: React.FC = () => {
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address</label>
+                                    <input
+                                        type="text"
+                                        value={createForm.address || ''}
+                                        onChange={e => setCreateForm({ ...createForm, address: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Profile Image</label>
+                                    {createForm.profileImage && (
+                                        <div className="mb-2">
+                                            <img src={createForm.profileImage} alt="Profile Preview" className="w-20 h-20 rounded-full object-cover border border-slate-200" />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setCreateForm({ ...createForm, profileImage: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                                 <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
-                                    <Save className="w-4 h-4 mr-2" /> Create Student
-                                </button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create Student</button>
                             </div>
                         </form>
                     </div>
@@ -380,6 +530,7 @@ const AdminStudents: React.FC = () => {
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
                                     <input
                                         type="text"
+                                        required
                                         value={editForm.fullName || ''}
                                         onChange={e => setEditForm({ ...editForm, fullName: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
@@ -389,6 +540,7 @@ const AdminStudents: React.FC = () => {
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
                                     <input
                                         type="email"
+                                        required
                                         value={editForm.email || ''}
                                         onChange={e => setEditForm({ ...editForm, email: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
@@ -398,6 +550,7 @@ const AdminStudents: React.FC = () => {
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Roll No</label>
                                     <input
                                         type="text"
+                                        required
                                         value={editForm.collegeRollNo || ''}
                                         onChange={e => setEditForm({ ...editForm, collegeRollNo: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
@@ -405,30 +558,42 @@ const AdminStudents: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Course</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.course || ''}
+                                    <select
+                                        value={editForm.course}
                                         onChange={e => setEditForm({ ...editForm, course: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                    />
+                                    >
+                                        <option value="B.Tech">B.Tech</option>
+                                        <option value="BCA">BCA</option>
+                                        <option value="MCA">MCA</option>
+                                        <option value="MBA">MBA</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.department || ''}
+                                    <select
+                                        value={editForm.department}
                                         onChange={e => setEditForm({ ...editForm, department: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                    />
+                                    >
+                                        <option value="CSE">CSE</option>
+                                        <option value="ECE">ECE</option>
+                                        <option value="ME">ME</option>
+                                        <option value="Civil">Civil</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Year</label>
-                                    <input
-                                        type="text"
-                                        value={editForm.year || ''}
+                                    <select
+                                        value={editForm.year}
                                         onChange={e => setEditForm({ ...editForm, year: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
-                                    />
+                                    >
+                                        <option value="1st">1st</option>
+                                        <option value="2nd">2nd</option>
+                                        <option value="3rd">3rd</option>
+                                        <option value="4th">4th</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Semester</label>
@@ -448,12 +613,84 @@ const AdminStudents: React.FC = () => {
                                         className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
                                     />
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Father's Name</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.fatherName || ''}
+                                        onChange={e => setEditForm({ ...editForm, fatherName: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mobile</label>
+                                    <input
+                                        type="text"
+                                        value={editForm.mobile || ''}
+                                        onChange={e => setEditForm({ ...editForm, mobile: e.target.value })}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Profile Image</label>
+                                    {editForm.profileImage && (
+                                        <div className="mb-2">
+                                            <img src={editForm.profileImage} alt="Profile Preview" className="w-20 h-20 rounded-full object-cover border border-slate-200" />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setEditForm({ ...editForm, profileImage: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                        className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    />
+                                </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                                 <button type="button" onClick={() => setEditStudent(null)} className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
-                                    <Save className="w-4 h-4 mr-2" /> Save Changes
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
+                                    <Save className="w-4 h-4" />
+                                    <span>Save Changes</span>
                                 </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Password Reset Modal */}
+            {passwordModal.show && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-200 dark:border-slate-700">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Reset Password</h3>
+                            <button onClick={() => setPasswordModal({ show: false, userId: null, name: '' })}><X className="w-5 h-5 text-slate-500" /></button>
+                        </div>
+                        <form onSubmit={handlePasswordReset} className="p-6 space-y-4">
+                            <p className="text-slate-600 dark:text-slate-300">Reset password for <strong>{passwordModal.name}</strong></p>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600 dark:text-white"
+                                    placeholder="Enter new password"
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3 pt-4">
+                                <button type="button" onClick={() => setPasswordModal({ show: false, userId: null, name: '' })} className="px-4 py-2 text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Update Password</button>
                             </div>
                         </form>
                     </div>

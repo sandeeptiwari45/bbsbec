@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true },
     role: { type: String, enum: ['student', 'faculty', 'admin'], required: true },
     designation: String, // e.g., 'Mentor', 'HOD', 'Principal', 'Professor', 'Assistant Professor'
     // Profile
@@ -12,6 +13,8 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: Date,
     address: String,
     caste: String,
+    shortName: String, // For faculty e.g. JPS
+    gender: { type: String, enum: ['Male', 'Female', 'Other'] },
     // Student specific
     fatherName: String,
     collegeRollNo: String,
@@ -27,11 +30,21 @@ const userSchema = new mongoose.Schema(
     teachingGroups: [String],
     isApproved: { type: Boolean, default: false },
     favourites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notice' }],
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      versionKey: false,
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
+  }
 );
-
-userSchema.index({ email: 1 });
 
 module.exports = mongoose.model('User', userSchema);
 

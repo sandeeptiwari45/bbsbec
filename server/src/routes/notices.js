@@ -60,10 +60,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/:id', async (req, res) => {
+  try {
+    const notice = await Notice.findById(req.params.id);
+    if (!notice) return res.status(404).json({ message: 'Notice not found' });
+    res.json(notice);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 router.post('/', async (req, res) => {
   try {
     const payload = req.body;
-    const notice = await Notice.create({
+    const newNotice = await Notice.create({
       title: payload.title,
       description: payload.description,
       category: payload.category,
@@ -73,7 +83,40 @@ router.post('/', async (req, res) => {
       eventDate: payload.eventDate,
       target: payload.target || { courses: [], departments: [], years: [], semesters: [], sections: [] },
     });
-    res.status(201).json(notice);
+
+    // Create notifications for target users
+    const Notification = require('../models/Notification');
+    const User = require('../models/User');
+
+    // Build query to find target users
+    const targetQuery = { role: 'student' }; // Default to students for notices
+
+    const usersToNotify = await User.find(targetQuery).select('_id');
+
+    const notifications = usersToNotify.map(user => ({
+      userId: user._id,
+      message: `New Notice: ${newNotice.title}`,
+      type: 'info',
+      relatedId: newNotice._id,
+      createdAt: new Date()
+    }));
+
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+    }
+
+    res.status(201).json(newNotice);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  try {
+    const updates = req.body;
+    const notice = await Notice.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!notice) return res.status(404).json({ message: 'Notice not found' });
+    res.json(notice);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -83,6 +126,26 @@ router.delete('/:id', async (req, res) => {
   try {
     await Notice.findByIdAndDelete(req.params.id);
     res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.patch('/:id/read', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ message: 'User ID is required' });
+
+    const notice = await Notice.findById(req.params.id);
+    if (!notice) return res.status(404).json({ message: 'Notice not found' });
+
+    const alreadyRead = notice.readBy.some(r => r.userId.toString() === userId);
+    if (!alreadyRead) {
+      notice.readBy.push({ userId, readAt: new Date() });
+      await notice.save();
+    }
+
+    res.json(notice);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

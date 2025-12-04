@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<void>;
   register: (data: any, code: string, allowedRoles?: Role[]) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -27,10 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string) => {
+  const login = async (email: string, password?: string) => {
     setIsLoading(true);
     try {
-      const loggedUser = await MockService.login(email);
+      const loggedUser = await MockService.login(email, password);
       setUser(loggedUser);
       localStorage.setItem('bbsbec_current_user', JSON.stringify(loggedUser));
     } finally {
@@ -56,8 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (u: User) => {
-      setUser(u);
-      localStorage.setItem('bbsbec_current_user', JSON.stringify(u));
+    setUser(u);
+    localStorage.setItem('bbsbec_current_user', JSON.stringify(u));
   };
 
   return (

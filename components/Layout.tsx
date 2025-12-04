@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Heart, User, LogOut, PlusCircle, ShieldCheck, Menu, X, Moon, Sun, Users, GraduationCap } from 'lucide-react';
+import { Home, Calendar, Heart, User, LogOut, PlusCircle, ShieldCheck, Menu, X, Moon, Sun, Users, GraduationCap, Search } from 'lucide-react';
 import NotificationPanel from './NotificationPanel';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,6 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         { path: '/admin/calendar', label: 'Calendar', icon: Calendar },
         { path: '/admin/students', label: 'Students', icon: Users },
         { path: '/admin/faculty', label: 'Faculty', icon: GraduationCap },
+        { path: '/admin/requests', label: 'Approvals & Requests', icon: User },
       ];
     }
   };
@@ -45,10 +46,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       {/* Mobile Header */}
       <div className="md:hidden bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center sticky top-0 z-20">
-        <span className="font-bold text-lg text-blue-700 dark:text-blue-400">BBSBEC Digital Notice Board</span>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          {mobileMenuOpen ? <X className="w-6 h-6 text-slate-600 dark:text-slate-300" /> : <Menu className="w-6 h-6 text-slate-600 dark:text-slate-300" />}
-        </button>
+        <span className="font-bold text-lg text-blue-700 dark:text-blue-400">BBSBEC</span>
+        <div className="flex items-center space-x-2">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="ml-2">
+            {mobileMenuOpen ? <X className="w-6 h-6 text-slate-600 dark:text-slate-300" /> : <Menu className="w-6 h-6 text-slate-600 dark:text-slate-300" />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar Navigation */}
@@ -102,13 +105,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               )}</div>
           </div>
           <div className="space-y-2">
-            <button
-              onClick={toggleTheme}
-              className="flex items-center space-x-3 px-4 py-2 w-full text-left text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors"
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
+
             <button
               onClick={logout}
               className="flex items-center space-x-3 px-4 py-2 w-full text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -122,9 +119,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto h-[calc(100vh-64px)] md:h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900">
-        <div className="max-w-5xl mx-auto">
-          {children}
+      <main className="flex-1 overflow-y-auto h-[calc(100vh-64px)] md:h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+        {/* Desktop/Tablet Header for Search & Notifications */}
+        <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 flex justify-between items-center sticky top-0 z-10">
+          <div className="flex items-center flex-1 max-w-xl">
+            <div className="relative w-full max-w-md hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-700/50 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <NotificationPanel />
+            <div className="flex items-center space-x-2 md:hidden">
+              {/* Mobile Search Icon placeholder if needed, or just rely on the main content */}
+            </div>
+          </div>
+        </header>
+
+        <div className="p-4 md:p-8 flex-1">
+          <div className="max-w-5xl mx-auto">
+            {children}
+          </div>
         </div>
       </main>
 

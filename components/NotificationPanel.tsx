@@ -1,116 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, X } from 'lucide-react';
-import { Notification } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bell, Check, X, Info, AlertCircle, CheckCircle } from 'lucide-react';
 import { MockService } from '../services/mockService';
 import { useAuth } from '../context/AuthContext';
 
+interface Notification {
+  _id: string;
+  message: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+  isRead: boolean;
+  createdAt: string;
+}
+
 const NotificationPanel: React.FC = () => {
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
       loadNotifications();
-      const interval = setInterval(loadNotifications, 30000); // Poll every 30s
+      // Poll every 30 seconds
+      const interval = setInterval(loadNotifications, 30000);
       return () => clearInterval(interval);
     }
   }, [user]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const loadNotifications = async () => {
     if (!user) return;
-    const data = await MockService.getNotifications(user.id);
-    setNotifications(data);
-    setUnreadCount(data.filter(n => !n.isRead).length);
+    try {
+      const data = await MockService.getNotifications(user.id);
+      setNotifications(data);
+      setUnreadCount(data.filter((n: Notification) => !n.isRead).length);
+    } catch (error) {
+      console.error('Failed to load notifications', error);
+    }
   };
 
-  const markAsRead = async (id: string) => {
-    await MockService.markNotificationRead(id);
-    loadNotifications();
+  const handleMarkRead = async (id: string) => {
+    try {
+      await MockService.markNotificationRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read', error);
+    }
   };
 
-  const markAllAsRead = async () => {
-    await MockService.markAllNotificationsRead(user!.id);
-    loadNotifications();
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'error': return <AlertCircle className="w-5 h-5 text-red-500" />;
+      case 'warning': return <AlertCircle className="w-5 h-5 text-yellow-500" />;
+      default: return <Info className="w-5 h-5 text-blue-500" />;
+    }
   };
-
-  if (!user) return null;
 
   return (
-    <>
+    <div className="relative" ref={panelRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-        title="Notifications"
+        className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center text-[10px]">
+          <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="fixed top-16 right-4 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-xl shadow-2xl z-50 max-h-[calc(100vh-5rem)] flex flex-col">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-800 dark:text-white">Notifications</h3>
-              <div className="flex items-center space-x-2">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    Mark all read
-                  </button>
-                )}
-                <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="overflow-y-auto flex-1">
-              {notifications.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                  No notifications
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                  {notifications.map(notif => (
-                    <div
-                      key={notif.id}
-                      onClick={() => markAsRead(notif.id)}
-                      className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors ${
-                        !notif.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-medium text-slate-800 dark:text-white text-sm">{notif.title}</p>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{notif.message}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                            {new Date(notif.createdAt).toLocaleString()}
-                          </p>
-                        </div>
-                        {!notif.isRead && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 className="font-bold text-slate-800 dark:text-white">Notifications</h3>
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        </>
+
+          <div className="max-h-[400px] overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                <Bell className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                <p className="text-sm">No notifications yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                {notifications.map(notification => (
+                  <div
+                    key={notification._id}
+                    className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${!notification.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-0.5">
+                        {getIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${!notification.isRead ? 'font-semibold text-slate-800 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      {!notification.isRead && (
+                        <button
+                          onClick={() => handleMarkRead(notification._id)}
+                          className="text-blue-600 hover:text-blue-700 p-1"
+                          title="Mark as read"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
 export default NotificationPanel;
-

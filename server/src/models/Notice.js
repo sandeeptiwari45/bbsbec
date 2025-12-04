@@ -25,12 +25,22 @@ const noticeSchema = new mongoose.Schema(
       semesters: [String],
       sections: [String],
     },
-    readBy: [{ 
+    readBy: [{
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       readAt: { type: Date, default: Date.now }
     }],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      versionKey: false,
+      transform: function (doc, ret) {
+        ret.id = ret._id;
+        delete ret._id;
+      },
+    },
+  }
 );
 
 module.exports = mongoose.model('Notice', noticeSchema);

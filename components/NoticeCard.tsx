@@ -10,9 +10,10 @@ import ReportNoticeModal from './ReportNoticeModal';
 interface NoticeCardProps {
   notice: Notice;
   onRefresh?: () => void;
+  onClick?: () => void;
 }
 
-const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
+const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh, onClick }) => {
   const { user, updateUser } = useAuth();
   const [showPublisherModal, setShowPublisherModal] = useState(false);
   const [showAttachment, setShowAttachment] = useState<number | null>(null);
@@ -38,8 +39,8 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
     if (!user) return;
     const newFavs = await MockService.toggleFavourite(user.id, notice.id);
     if (newFavs) {
-        updateUser({ ...user, favourites: newFavs });
-        if (onRefresh) onRefresh();
+      updateUser({ ...user, favourites: newFavs });
+      if (onRefresh) onRefresh();
     }
   };
 
@@ -56,17 +57,18 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
     if (onRefresh) onRefresh();
   };
 
-  React.useEffect(() => {
-    if (user && !notice.isRead) {
-      markAsRead();
-    }
-  }, []);
+  const handleClick = () => {
+    markAsRead();
+    if (onClick) onClick();
+  };
+
+
 
   return (
     <>
-      <div 
+      <div
         className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:shadow-md transition-shadow relative group cursor-pointer"
-        onClick={markAsRead}
+        onClick={handleClick}
       >
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center space-x-2">
@@ -99,7 +101,7 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
                 <button onClick={toggleFav} className="focus:outline-none transition-transform active:scale-95">
                   <Heart className={`w-5 h-5 ${isFav ? 'fill-red-500 text-red-500' : 'text-slate-300 hover:text-slate-500'}`} />
                 </button>
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setShowReportModal(true); }}
                   className="text-slate-300 hover:text-red-500 transition-colors"
                   title="Report notice"
@@ -110,9 +112,10 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
             )}
           </div>
         </div>
-        
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-2 leading-tight">{notice.title}</h3>
+
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-tight group-hover:text-blue-600 transition-colors">{notice.title}</h3>
         <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-3">{notice.description}</p>
+        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-3 opacity-0 group-hover:opacity-100 transition-opacity">Read full notice &rarr;</div>
 
         {notice.attachments && notice.attachments.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -128,9 +131,9 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
             ))}
           </div>
         )}
-        
+
         <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
-          <button 
+          <button
             onClick={handlePublisherClick}
             className="flex items-center space-x-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
@@ -156,15 +159,15 @@ const NoticeCard: React.FC<NoticeCardProps> = ({ notice, onRefresh }) => {
       )}
 
       {showAttachment !== null && notice.attachments && (
-        <AttachmentPreview 
-          attachment={notice.attachments[showAttachment]} 
-          onClose={() => setShowAttachment(null)} 
+        <AttachmentPreview
+          attachment={notice.attachments[showAttachment]}
+          onClose={() => setShowAttachment(null)}
         />
       )}
 
       {showReportModal && (
-        <ReportNoticeModal 
-          noticeId={notice.id} 
+        <ReportNoticeModal
+          noticeId={notice.id}
           onClose={() => setShowReportModal(false)}
           onSuccess={onRefresh}
         />

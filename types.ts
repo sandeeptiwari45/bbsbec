@@ -11,6 +11,7 @@ export interface User {
   dateOfBirth?: string;
   address?: string;
   caste?: string;
+  shortName?: string;
   // Student specific fields
   fatherName?: string;
   collegeRollNo?: string;
@@ -69,6 +70,13 @@ export interface CalendarEvent {
   eventTime?: string;
   createdBy: string;
   createdByName: string;
+  course?: string;
+  department?: string;
+  year?: string;
+  semester?: string;
+  section?: string;
+  group?: string;
+  specificRollNumbers?: string[];
 }
 
 export interface Notification {
@@ -96,6 +104,18 @@ export interface UniqueCode {
   code: string;
   role: Role;
   isUsed: boolean;
+  usedBy?: {
+    id: string;
+    fullName: string;
+    email: string;
+    collegeRollNo?: string;
+    department?: string;
+    mobile?: string;
+    fatherName?: string;
+    course?: string;
+    year?: string;
+    semester?: string;
+  };
   createdFor?: string; // description
 }
 
