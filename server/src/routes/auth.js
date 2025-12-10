@@ -97,7 +97,9 @@ router.post('/forgot-password', async (req, res) => {
     const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetToken}`;
     // For local development with separate frontend (React running on 5173 usually)
     // We'll construct the frontend URL. Assuming frontend is on localhost:5173
-    const frontendUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL
+      ? `${process.env.FRONTEND_URL}/reset-password/${resetToken}`
+      : `http://localhost:5173/reset-password/${resetToken}`;
 
     const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${frontendUrl}`;
 
