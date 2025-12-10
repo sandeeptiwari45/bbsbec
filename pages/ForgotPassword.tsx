@@ -13,8 +13,8 @@ const ForgotPassword = () => {
         setMessage('');
 
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-            const response = await fetch(`${apiUrl}/auth/forgot-password`, {
+            const baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, '');
+            const response = await fetch(`${baseUrl}/api/auth/forgot-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

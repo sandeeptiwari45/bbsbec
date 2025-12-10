@@ -1,6 +1,8 @@
 import { User, Notice, UniqueCode, Role, CalendarEvent } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// Get base URL from env or default to localhost. Ensure no trailing slash.
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, '');
+const API_URL = `${BASE_URL}/api`;
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
