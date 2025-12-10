@@ -4,6 +4,12 @@ import { User, Notice, UniqueCode, Role, CalendarEvent } from '../types';
 const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, '');
 const API_URL = `${BASE_URL}/api`;
 
+console.log('Current API Configuration:', {
+  mode: import.meta.env.MODE,
+  baseUrl: BASE_URL,
+  apiUrl: API_URL
+});
+
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));

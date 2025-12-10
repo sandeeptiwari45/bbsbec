@@ -7,36 +7,42 @@ This guide will help you deploy your BBSBEC Digital Notice Board application to 
 1.  A [Render](https://render.com) account.
 2.  Your code pushed to a GitHub or GitLab repository.
 
-## Steps
+## Steps to Deploy
 
 1.  **Push your code**: Ensure all your local changes (including the new `render.yaml` file) are committed and pushed to your git repository.
 
-2.  **Create a New Blueprint Instance**:
+2.  **Create a New Blueprint Instance (Recommended)**:
     *   Go to your Render Dashboard.
     *   Click **New +** and select **Blueprint**.
-    *   Connect your GitHub/GitLab account if you haven't already.
-    *   Select your repository (`bbsbec-digital-notice-board` or similar).
+    *   Connect your GitHub account.
+    *   Select your repository (`bbsbec-digital-notice-board`).
+    *   Render will read the `render.yaml` file and set up everything automatically.
+    *   **Environment Variables**: You will be asked for `MONGO_URI`. Enter your MongoDB connection string.
 
-3.  **Configure Services**:
-    *   Render will automatically detect the `render.yaml` file and propose 2 services:
-        *   `bbsbec-api` (Web Service)
-        *   `bbsbec-web` (Static Site)
-    *   You will be prompted to provide values for environment variables that are not auto-generated:
-        *   `MONGO_URI`: Enter your MongoDB connection string (e.g., from MongoDB Atlas).
-    *   `JWT_SECRET` will be auto-generated.
-    *   `FRONTEND_URL` and `VITE_API_URL` will be automatically linked.
+3.  **Manual Setup (If not using Blueprint)**:
+    *   **Backend Service**: Create a Web Service for `server` directory. Command: `npm start`.
+    *   **Frontend Service**: Create a Static Site for root directory. Build Command: `npm run build`. Publish directory: `dist`.
+    *   **IMPORTANT**: You MUST connect them using an environment variable.
+        1.  Copy the **Backend URL** (e.g., `https://bbsbec-api.onrender.com`).
+        2.  Go to **Frontend Service** > **Environment**.
+        3.  Add Key: `VITE_API_URL`, Value: `https://bbsbec-api.onrender.com` (Your actual backend URL).
+        4.  Redeploy the Frontend.
 
-4.  **Deploy**:
-    *   Click **Apply**.
-    *   Render will start deploying both services.
-    *   Once the deployment is complete, your app will be live!
+## Troubleshooting "Failed to Fetch" on Phone
 
-## Validation
+If your website opens but shows "Failed to fetch" or "Network Error" when logging in:
 
-*   Visit the URL provided for `bbsbec-web` to see your frontend.
-*   Try logging in or resetting your password to verify the backend connection.
+**Reason**: The Frontend doesn't know where the Backend is, so it's trying to connect to `localhost`. `localhost` only works on your own laptop.
 
-## Troubleshooting
+**Solution**:
+1.  Go to your **Render Dashboard**.
+2.  Click on your **Backend Service** (`bbsbec-api`) and copy the URL (top left, starts with `https://`).
+3.  Click on your **Frontend Service** (`bbsbec-web`).
+4.  Go to **Environment** tab.
+5.  Add a new Variable:
+    *   **Key**: `VITE_API_URL`
+    *   **Value**: (Paste the Backend URL you copied)
+6.  Click **Save Changes**.
+7.  Click **Deploy** > **Redeploy**.
 
-*   **CORS Issues**: If you see CORS errors, check that the backend is running and `server/src/server.js` has `app.use(cors())`.
-*   **Database Connection**: Ensure your IP address is whitelisted in MongoDB Atlas (allow 0.0.0.0/0 for Render).
+Once redeployed, the Frontend will know to talk to the Backend on the internet.
